@@ -33,7 +33,8 @@ export const RegisterForm = () => {
     if (!result.success) {
       setError(result.message ?? '');
     } else {
-      alert('Registration successful!');
+      // alert('Registration successful!');
+      window.location.href = '/chao/me'; // Redirect to login
     }   
 
   };

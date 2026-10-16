@@ -27,3 +27,7 @@
 @utility actionButton {
   @apply w-5/6 px-4 py-2 rounded bg-emerald-500 text-white hover:shadow-xl shadow-emerald-500/30 dark:hover:shadow-emerald-500/30;
 } 
+
+@utility card {
+  @apply bg-white dark:bg-zinc-800 border border-neutral-200 dark:border-neutral-900 rounded;
+} 

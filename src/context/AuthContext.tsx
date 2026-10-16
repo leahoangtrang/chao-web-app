@@ -1,11 +1,23 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { AuthService } from '../api/auth.service';
+// import { UserService } from '../api/user.service';
+
+// Define what a User object looks like
+// export interface User {
+//   id?: number | string;
+//   username: string;
+//   email?: string;
+//   completedLessonsCount?: number;
+//   learnedVocabCount?: number;
+// }
 
 // 1. Define the context value shape
 export interface AuthContextType {
+  // user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  // login: (username: string, password: string, userData?: User) => Promise<{ success: boolean; message?: string }>;
+  login: (username: string, password: string, rememberMe: boolean) => Promise<{ success: boolean; message?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
@@ -28,12 +40,24 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
     }
   }, [token]);
 
+  // 1. Initialize user from localStorage
+  // const [user, setUser] = useState<User | null>(() => {
+  //   const savedUser = localStorage.getItem('user');
+  //   return savedUser ? JSON.parse(savedUser) : null;
+  // });
+
   // Handle Login
-  const login = async (username : string, password : string) => {
+  const login = async (email : string, password : string, rememberMe : boolean) => {
     try {
-      const data = await AuthService.login({ username, password });
+      const data = await AuthService.login({ email, password, rememberMe });
       const jwtToken = data.token;
       setToken(jwtToken);
+
+      // const response = await UserService.getUser();
+      // if (response) {
+      // setUser(response);
+      // localStorage.setItem('user', JSON.stringify(response));
+    // }
       return { success: true };
     } catch (error : any) {
       const errorMessage: string = error.response?.data?.message ?? 'Login failed';
@@ -75,10 +99,14 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
   // Handle Logout
   const logout = () => {
     setToken(null);
+    // setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   return (
     <AuthContext.Provider
+      // value={{ user, token, isAuthenticated, login, register, logout }}
       value={{ token, isAuthenticated, login, register, logout }}
     >
       {children}

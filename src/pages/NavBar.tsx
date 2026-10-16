@@ -24,9 +24,12 @@ export default function Navbar() {
     <header className="w-full bg-emerald-800 dark:bg-emerald-600 text-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             {/* Brand / Logo */}
-            <Link to="/chao/about" className="flex items-center gap-1 group">
-                <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
-                    🌿
+            <Link to="/chao/about" className="flex items-center gap-0.5 group">
+                {/* <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
+                    🌱
+                </span> */}
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xl font-bold border border-white/50 group-hover:scale-110 transition-transform duration-200">
+                    🌱
                 </span>
                 <span className="font-extrabold text-xl tracking-wide text-white">
                     Chao

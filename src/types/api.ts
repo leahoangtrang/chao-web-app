@@ -59,8 +59,9 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
+  rememberMe: boolean;
 }
 
 // 6. Response DTO (Received from Spring Boot)
@@ -70,13 +71,28 @@ export interface AuthResponse {
 
 // 7. User 
 export interface UserResponse{
-  id: number;
   username: string;
-  password: string;
   email: string;
 }
 
 export interface UpdateUserRequest{
   username?: string;
   email?: string;
+}
+
+export interface UpdateUserResponse{
+  token: string;
+  username: string;
+  email: string;
+}
+
+export interface ChangePasswordRequest{
+  currentPassword: string;
+  newPassword: string;
+  confirmationPassword: string;
+}
+
+export interface ResetPasswordRequest{
+  token: string;
+  newPassword: string;
 }

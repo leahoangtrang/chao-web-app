@@ -8,6 +8,8 @@ import { RegisterForm } from './pages/Register';
 import { Login } from './pages/Login';
 import Navbar from './pages/NavBar';
 import UserPage from './pages/UserPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 
 export default function App() {
@@ -41,6 +43,8 @@ export default function App() {
 
         {/* Step 6: Login */}
         <Route path="/chao/login" element={<Login />} />
+        <Route path="/chao/forgot-password" element={<ForgotPassword />} />
+        <Route path="/chao/reset-password" element={<ResetPassword />} />
 
         {/* Step 7: User profile */}
         <Route path="/chao/me" element={<UserPage />} />
