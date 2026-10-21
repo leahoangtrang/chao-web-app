@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 export type Language = 'EN' | 'SK' | 'VI';
 
 export const translations = {

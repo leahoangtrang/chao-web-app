@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import axios from 'axios';
 
 // Mirco-servicea, Different ports

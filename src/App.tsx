@@ -1,5 +1,6 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import './App.css'
-import { BrowserRouter, Routes, Route, Link, useParams, Navigate } from 'react-router';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { LevelUnitsPage } from './pages/UnitPage';
 import { LessonPage } from './pages/LessonPage';
 import { LandingPage } from './pages/LandingPage';
@@ -10,18 +11,12 @@ import Navbar from './pages/NavBar';
 import UserPage from './pages/UserPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ChatPage from './pages/ChatPage';
 
 
 export default function App() {
   return (
     <BrowserRouter>
-      {/* <nav className="bg-emerald-800 dark:bg-emerald-600 text-white flex flex-row gap-4">
-        <Link to="/chao/about" className="font-bold border-r borde-white-1 p-3">Chao</Link>
-        <Link to="/chao/levels" className=' border-r borde-white-1 p-3'>Ⓐ All courses</Link>
-        <Link to="/chao/about" className=' border-r borde-white-1 p-3'>✉ Chat</Link>
-        <Link to="/chao/me" className=' border-r borde-white-1 p-3'>웃 Profile</Link>
-      </nav> */}
-
       <Navbar />
 
       <Routes>
@@ -49,6 +44,8 @@ export default function App() {
         {/* Step 7: User profile */}
         <Route path="/chao/me" element={<UserPage />} />
 
+        {/* Step 8: Chat */}
+        <Route path="/chao/chat" element={<ChatPage />} />
 
         {/* Wildcard Catch-All: Redirects all unknown URLs back to Home */}
         <Route path="*" element={<Navigate to="/chao/A1" replace/>}/>

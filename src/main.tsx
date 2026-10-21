@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

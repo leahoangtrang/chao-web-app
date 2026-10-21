@@ -1,139 +1,110 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router';
-import type { Exercise, LessonDetail } from '../types/api';
-import { LessonService } from '../api/lesson.service';
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
+import React, { useEffect, useState } from 'react';
+import { Navigate, useParams } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
+import type { Exercise, LessonDetail, Material } from '../types/api';
+import { LessonService } from '../api/lesson.service';
+import { ProgressService } from '../api/progress.service';
+import { useAuth } from '../context/AuthContext';
 
 export function LessonPage() {
   // State for fetched lesson data
   const { levelId, lessonId } = useParams<{ levelId: string; lessonId: string }>();
   const parsedId = Number(lessonId);
 
-  const { t } = useLanguage();
-  
-  // console.log(parsedId, isNaN(parsedId));
-  // Redirect to Home if levelId is invalid or greater than 80
   if (!levelId || isNaN(parsedId) || parsedId > 80 || parsedId < 1) {
-    console.log("In")
     return <Navigate to="/chao/A1/1" replace />;
   }
 
+  const { isAuthenticated } = useAuth();
+  const { t, language } = useLanguage();
   const [lesson, setLesson] = useState<LessonDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+        const fetchLesson = async () => {
+        try {
+            const data = await LessonService.getLessonById(lessonId ?? '1');
+            setLesson(data);
+        } catch (error) {
+            console.error('Failed to fetch lesson:', error);
+        } finally {
+            setLoading(false);
+        }};
 
-  // const navigate = useNavigate();
+        fetchLesson();
+    }, [lessonId]);
 
-  // Lesson progression state
-  // Current material index (0, 1, or 2)
-  const [materialIdx, setMaterialIdx] = useState<number>(0);
-  // User answers per exercise: { [exerciseId]: string }
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
-  // Feedback state for each exercise: { [exerciseId]: boolean }
+    useEffect(() => {
+        const fetchProgress = async () => {
+            try {
+                // Convert IDs to strings to match material.id type safely
+                const data = await ProgressService.fetchProgress();
+                const stringIds = data.map(id => String(id));
+                setCompletedMaterials(new Set(stringIds));
+            } catch (error) {
+                console.error("Failed to load user progress", error);
+            };
+        }
+        
+      fetchProgress();
+    }, []);
+
+  // State to hold user answers: { [exerciseId]: string | string[] | { [key]: value } }
+  const [userAnswers, setUserAnswers] = useState<Record<string, any>>({});
+  // State to hold verification status: { [exerciseId]: boolean }
   const [exerciseStatus, setExerciseStatus] = useState<Record<string, boolean>>({});
-  // Set of completed material IDs
-  const [learnedMaterialIds, setLearnedMaterialIds] = useState<number[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  // Track which material IDs have already sent a completion request to the backend
+  const [completedMaterials, setCompletedMaterials] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchLesson = async () => {
-      try {
-        const data = await LessonService.getLessonById(lessonId ?? '1');
-        setLesson(data);
-      } catch (error) {
-        console.error('Failed to fetch lesson:', error);
-      } finally {
-        setLoading(false);
-      }
+  // Check handler for individual exercises
+  const handleCheckExercise = (ex : Exercise) => {
+    const userAnswer = userAnswers[ex.id];
+    let isCorrect = false;
 
-    };
-
-    fetchLesson();
-  }, [lessonId]);
-
-  const currentMaterial = lesson?.materials[materialIdx];
-  const exercises = currentMaterial?.exercises || [];
-
-    // Handle option selection for current exercise
-  // const handleSelectOption = (optionIndex: number) => {
-  //   setSelectedAnswers((prev) => ({
-  //     ...prev,
-  //     [materialIdx]: optionIndex,
-  //   }));
-  // };
-
-  // // Next / Previous Navigation
-  // const handleNext = () => {
-  //   if (materialIdx < totalSteps - 1) {
-  //     setmaterialIdx((prev) => prev + 1);
-  //   }
-  // };
-
-  // const handlePrev = () => {
-  //   if (materialIdx > 0) {
-  //     setmaterialIdx((prev) => prev - 1);
-  //   }
-  // };
-
-  // const handleSaveProgress = async () => {
-  //   const baseUrl = import.meta.env.VITE_API_BASE_URL;
-
-  //   await fetch(`${baseUrl}/user-progress/lessons/${lessonId}`, {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({
-  //       completed: isCompleted,
-  //       proficiencyScore: proficiencyScore,
-  //     }),
-  //   });
-
-  //   navigate(`/chao/levels/${levelId}`);
-  // };
-
-  // 2. Frontend Answer Verification
-  const handleCheckExercise = (exercise: Exercise) => {
-    const input = userAnswers[exercise.id] || '';
-    
-    // Case-insensitive & trimmed comparison against backend correctAnswer
-    const isCorrect = input.trim().toLowerCase() === exercise?.correctAnswer?.trim().toLowerCase();
-
-    setExerciseStatus((prev) => ({
-      ...prev,
-      [exercise.id]: isCorrect,
-    }));
-  };
-
-  // Check if ALL exercises in current material are answered correctly
-  const isCurrentMaterialCompleted =
-    exercises.length > 0 && exercises.every((ex) => exerciseStatus[ex.id] === true);
-
-  // 3. Save Progress via Axios & Advance Material
-  const handleCompleteMaterial = async () => {
-    if (!isCurrentMaterialCompleted || !currentMaterial) return;
-
-    const updatedLearned = [...new Set([...learnedMaterialIds, currentMaterial.id])];
-
-    try {
-      setIsSaving(true);
-
-      // Axios call to save progress in backend
-      // await axios.post(`/api/materials/${currentMaterial.id}/complete`, {
-      //   materialId: currentMaterial.id,
-      //   lessonId: lessonData.lessonId,
-      // });
-
-      setLearnedMaterialIds(updatedLearned);
-
-      // Advance to next material if available
-      if (materialIdx < lesson.materials.length - 1) {
-        setMaterialIdx((prev) => prev + 1);
-      }
-    } catch (err) {
-      console.error('Failed to save material progress:', err);
-      alert('Failed to save progress. Please try again.');
-    } finally {
-      setIsSaving(false);
+    if (ex.type === 'TRANSLATION_INPUT') {
+      isCorrect = (userAnswer || '').trim().toLowerCase() === (ex.correctAnswer || '').trim().toLowerCase();
+    } else if (ex.type === 'MULTIPLE_CHOICE') {
+      isCorrect = userAnswer === ex.correctAnswer;
+    } else if (ex.type === 'MATCHING') {
+      const userPairs = userAnswer || {};
+      const targetPairs = ex.pairs || {};
+      const keys = Object.keys(targetPairs);
+      
+      isCorrect = keys.length > 0 && keys.every(key => userPairs[key] === targetPairs[key]);
     }
+
+    setExerciseStatus(prev => ({ ...prev, [ex.id]: isCorrect }));
   };
+
+  // Helper: Check if a material is finished (either from database history OR current session answers)
+  const isMaterialFinished = (material: Material) => {
+    if (completedMaterials.has(String(material.id))) return true;
+    if (!material.exercises || material.exercises.length === 0) return false;
+    return material.exercises.every(ex => exerciseStatus[ex.id] === true);
+  };
+
+  // Calculate overall progress across all materials in the lesson
+  const totalMaterials = lesson?.materials.length;
+  const finishedCount = lesson?.materials.filter(mat => isMaterialFinished(mat)).length;
+  const progressPercentage = totalMaterials? ((finishedCount? finishedCount : 0) / totalMaterials) * 100 : 0;
+
+  // Effect: When a material becomes finished, trigger backend progress save (if not already saved)
+  useEffect(() => {
+    lesson?.materials.forEach(material => {
+      if (isMaterialFinished(material) && !completedMaterials.has(material.id)) {
+        // Mark locally as sent so it doesn't spam requests on re-render
+        setCompletedMaterials(prev => new Set(prev).add(material.id));
+        if (isAuthenticated) {
+            try {
+                ProgressService.saveProgress(material.id)
+            } catch (error) {
+                console.error("Failed to save material progress", error);
+            }
+        }
+      }
+    });
+  }, [exerciseStatus, lesson?.materials, completedMaterials]);
 
   if (loading) return <div className="p-8 text-center text-gray-500">{t.lesson.loading}</div>;
   if (!lesson) return <div className="p-8 text-center text-red-500">Lesson not found.</div>;
@@ -145,214 +116,225 @@ export function LessonPage() {
         <div className="flex flex-row w-full justify-between">
           <span className="text font-semibold text-emerald-800 dark:text-emerald-600 uppercase">L{lessonId}: {lesson.title}</span>
           <span>
-            <span className='font-semibold text-emerald-800 dark:text-emerald-600'>{materialIdx}</span> / {lesson.materials.length} <span className='text-emerald-800 dark:text-emerald-600'>♠</span>
+            <span className='font-semibold text-emerald-800 dark:text-emerald-600'>{finishedCount}</span> / {totalMaterials} <span className='text-emerald-800 dark:text-emerald-600'>♠</span>
           </span>
         </div>
         {/* Step Progress Track */}
         <div className="felx flex-row flex-nowrap w-full h-2 justify-end bg-white dark:bg-zinc-800 rounded overflow-hidden">
           <div
             className="rounded h-2 bg-emerald-800 dark:bg-emerald-600"
-            style={{ width: `${((materialIdx + 0) / lesson.materials.length) * 100}%` }}
+            style={{ width: `${progressPercentage}%` }}
           />
         </div>
-      </div>
+      </div> 
 
-      {/* Main Material Card */}
-      {lesson.materials.map((mat) => (
-        <div key={mat.id} className='bg-white dark:bg-zinc-800 border border-neutral-200 dark:border-neutral-900 rounded p-3'>
-          {/* Vocabulary Notes */}
-          <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
-            <input
-            type="checkbox"
-            id={`vocab-toggle-${mat.id}`}
-            className="peer hidden"
-            />
-            <label
-              htmlFor={`vocab-toggle-${mat.id}`}
-              className="flex items-center justify-between w-full py-2 font-semibold peer-checked:[&_span.arrow]:rotate-180 text-slate-900 dark:text-zinc-200 cursor-pointer"
-            >
-              <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-200 mb-1">
-              {t.lesson.vocabulary}
-              </h4>
-              <span className="arrow inline-block text-sm transition-transform">▼</span>
-            </label>
-            
-            <table className="hidden peer-checked:block border-t py-3 border-slate-900 dark:border-zinc-200 text-sm text-slate-900 dark:text-slate-200 whitespace-pre-line">
-              <tbody>
-                {mat.vocabularies.map((vocab) => (
-                  <tr key={vocab.id}>
-                    <td className='pr-1'>{vocab.lemma} </td>
-                    <td>{vocab.translations["en"]}</td>
-                  </tr>
-                  // <p key={vocab.id} className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{vocab.lemma}: {vocab.translations["en"]}</p>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* Loop through each Material in the Lesson */}
+      {(lesson?.materials || []).map((material) => {
+        
+        // Group exercises by type for THIS specific material
+        const groupedExercises = (material?.exercises || []).reduce((acc : any, exercise : Exercise) => {
+          const type = exercise.type;
+          if (!type) return acc;
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(exercise);
+          return acc;
+        }, {});
 
-          {/* Material Notes */}
-          {/* <div className="mb-6 p-4 rounded-xl bg-tree-50 dark:bg-tree-950/40 border border-tree-100 dark:border-tree-900"> */}
-          <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
-            <h4 className="text-lg font-bold py-2 text-slate-900 dark:text-zinc-200 mb-1">
-              {mat.title}
-            </h4>
-            <p className="text-sm border-t py-3 border-slate-900 dark:border-zinc-200 text-slate-900 dark:text-zinc-200 whitespace-pre-line">
-              {mat.note ? mat.note.replace(/\\n/g, '\n') : ''}
-            </p>
-          </div>
-
-          {/* Exercises List: Need to be repaired */}
-          <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
-            <input
-            type="checkbox"
-            id={`exercises-toggle-${mat.id}`}
-            className="peer hidden"
-            />
-
-            <label
-              htmlFor={`exercises-toggle-${mat.id}`}
-              className="flex items-center justify-between w-full py-2 font-semibold peer-checked:[&_span.arrow]:rotate-180 text-slate-900 dark:text-zinc-200 cursor-pointer"
-            >
-              <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-200 mb-1">
-             {t.lesson.exercises}
-              </h4>
-              <div>
-                ♠
-                <span className="arrow inline-block text-sm transition-transform pl-2">▼</span>
-              </div>
-            </label>
-
-            {/* <h4 className="font-extrabold text-slate-800 dark:text-slate-100">Exercises</h4> */}
-            <div className="hidden peer-checked:block border-t py-3 border-slate-900 dark:border-zinc-200">
-              {mat.exercises.map((ex, index) => {
-                const status = exerciseStatus[ex.id];
-                return (
-                  <div
-                    key={ex.id}
-                    className="space-y-3 pb-3"
-                  >
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                      {index + 1}. {ex.prompt}
-                    </p>
-
-                    {/* TRANSLATION_INPUT Type */}
-                    {ex.type === 'TRANSLATION_INPUT' && (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Type Slovak translation..."
-                          value={userAnswers[ex.id] || ''}
-                          onChange={(e) =>
-                            setUserAnswers((prev) => ({ ...prev, [ex.id]: e.target.value }))
-                          }
-                          className="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-canvas-dark text-sm outline-none focus:border-tree-500"
-                        />
-                        <button
-                          onClick={() => handleCheckExercise(ex)}
-                          className="px-4 py-2 bg-neutral-800 dark:bg-neutral-700 hover:bg-neutral-900 text-white font-semibold text-xs rounded-lg transition-colors"
-                        >
-                          {t.lesson.check}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Verification Result Feedback */}
-                    {status !== undefined && (
-                      <p
-                        className={`text-xs font-bold ${
-                          status ? 'text-tree-600 dark:text-tree-400' : 'text-red-500'
-                        }`}
-                      >
-                        {status ? `${t.lesson.correct}` : `${t.lesson.tryAgain}`}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            
-          </div>
-        </div> 
-      ))}
-        {/* Material Notes */}
-        {/* <div className="mb-6 p-4 rounded-xl bg-tree-50 dark:bg-tree-950/40 border border-tree-100 dark:border-tree-900">
-          <h3 className="text-lg font-bold text-tree-900 dark:text-tree-300 mb-1">
-            {currentMaterial?.title}
-          </h3>
-          <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">
-            {currentMaterial?.note}
-          </p>
-        </div> */}
-
-        {/* Exercises List */}
-        {/* <div className="space-y-5">
-          <h4 className="font-extrabold text-slate-800 dark:text-slate-100">Exercises</h4>
-
-          {exercises.map((ex, index) => {
-            const status = exerciseStatus[ex.id];
-
-            return (
-              <div
-                key={ex.id}
-                className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 space-y-3"
-              >
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  {index + 1}. {ex.prompt}
-                </p>
-
-                {ex.type === 'TRANSLATION_INPUT' && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Type Slovak translation..."
-                      value={userAnswers[ex.id] || ''}
-                      onChange={(e) =>
-                        setUserAnswers((prev) => ({ ...prev, [ex.id]: e.target.value }))
-                      }
-                      className="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-canvas-dark text-sm outline-none focus:border-tree-500"
-                    />
-                    <button
-                      onClick={() => handleCheckExercise(ex)}
-                      className="px-4 py-2 bg-neutral-800 dark:bg-neutral-700 hover:bg-neutral-900 text-white font-semibold text-xs rounded-lg transition-colors"
-                    >
-                      Check
-                    </button>
-                  </div>
-                )}
-
-                {status !== undefined && (
-                  <p
-                    className={`text-xs font-bold ${
-                      status ? 'text-tree-600 dark:text-tree-400' : 'text-red-500'
-                    }`}
-                  >
-                    {status ? '✓ Correct!' : '✕ Try again.'}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div> */}
-
-        {/* Save / Next Footer */}
-        {/* <div className="mt-8 pt-4 border-t border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
-          <span className="text-xs text-slate-500">
-            {isCurrentMaterialCompleted
-              ? 'All 3 correct! Click below to complete.'
-              : 'Complete all 3 exercises correctly to advance.'}
-          </span>
-
-          <button
-            onClick={handleCompleteMaterial}
-            disabled={!isCurrentMaterialCompleted || isSaving}
-            className="px-5 py-2.5 rounded-xl bg-tree-500 hover:bg-tree-600 disabled:opacity-40 text-white font-bold transition-all shadow-md text-sm"
+        return (
+          <div 
+            key={material.id} 
+            className="bg-white dark:bg-zinc-800 border border-neutral-200 dark:border-neutral-900 rounded p-3"
           >
-            {isSaving ? 'Saving...' : 'Complete Material & Save 💾'}
-          </button>
-        </div> */}
+            {/* Vocabulary Notes */}
+            <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
+                <input
+                type="checkbox"
+                id={`vocab-toggle-${material.id}`}
+                className="peer hidden"
+                />
+                <label
+                htmlFor={`vocab-toggle-${material.id}`}
+                className="flex items-center justify-between w-full py-2 font-semibold peer-checked:[&_span.arrow]:rotate-180 text-slate-900 dark:text-zinc-200 cursor-pointer"
+                >
+                <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-200 mb-1">
+                {t.lesson.vocabulary}
+                </h4>
+                <span className="arrow inline-block text-sm transition-transform">▼</span>
+                </label>
+                
+                <table className="hidden peer-checked:block border-t py-3 border-slate-900 dark:border-zinc-200 text-sm text-slate-900 dark:text-slate-200 whitespace-pre-line">
+                <tbody>
+                    {material.vocabularies.map((vocab) => (
+                    <tr key={vocab.id}>
+                        <td className='pr-1'>{vocab.lemma} </td>
+                        <td>{vocab.translations[ language==="SK"? "en" : language ]}</td>
+                    </tr>
+                    // <p key={vocab.id} className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{vocab.lemma}: {vocab.translations["en"]}</p>
+                    ))}
+                </tbody>
+                </table>
+            </div>
 
-      {/* </div> */}
+            {/* Material Notes */}
+            <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
+                <h4 className="text-lg font-bold py-2 text-slate-900 dark:text-zinc-200 mb-1">
+                {material.title}
+                </h4>
+                <p className="text-sm border-t py-3 border-slate-900 dark:border-zinc-200 text-slate-900 dark:text-zinc-200 whitespace-pre-line">
+                {material.note ? material.note.replace(/\\n/g, '\n') : ''}
+                </p>
+            </div>
+
+            {/* Exercises List */}
+            <div className="rounded mb-3 px-3 border border-slate-900 dark:border-zinc-200">
+                <input
+                type="checkbox"
+                id={`exercises-toggle-${material.id}`}
+                className="peer hidden"
+                />
+
+                <label
+                htmlFor={`exercises-toggle-${material.id}`}
+                className="flex items-center justify-between w-full py-2 font-semibold peer-checked:[&_span.arrow]:rotate-180 text-slate-900 dark:text-zinc-200 cursor-pointer"
+                >
+                <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-200 mb-1">
+                {t.lesson.exercises}
+                </h4>
+                <div>
+                  <span className={`${isMaterialFinished(material) ? "text-emerald-800 dark:text-emerald-600" : ""}`}>♠</span>
+                  <span className="arrow inline-block text-sm transition-transform ml-2">▼</span>
+                </div>
+                </label>
+
+            {/* Render Exercises Grouped by Type within this Material */}
+            {Object.entries(groupedExercises).map(([type, exercises] : any, exerciseId :number) => (
+              <div key={type} className="hidden peer-checked:block border-t py-3 border-slate-900 dark:border-zinc-200">
+                <h3 className="text-xs font-bold uppercase">
+                  Exercise {exerciseId + 1} 
+                </h3> {/* {t.} */}
+
+                {exercises.map((ex : Exercise, index : any) => {
+                  const status = exerciseStatus[ex.id];
+
+                  return (
+                    <div 
+                      key={ex.id} 
+                      className="space-y-3 pb-4"
+                    >
+                      <p className="text-sm text-slate-900 dark:text-zinc-200">
+                        {index + 1}. {ex.prompt}
+                      </p>
+
+                      {/* TRANSLATION_INPUT Type */}
+                      {ex.type === 'TRANSLATION_INPUT' && (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Type Slovak translation..." //{t.}
+                            value={userAnswers[ex.id] || ''}
+                            onChange={(e) =>
+                              setUserAnswers((prev) => ({ ...prev, [ex.id]: e.target.value }))
+                            }
+                            className="flex-1 px-3 py-2 rounded border border-neutral-400 bg-white dark:bg-zinc-800 text-sm outline-none focus:border-emerald-500"
+                          />
+                          <button
+                            onClick={() => handleCheckExercise(ex)}
+                            className="px-4 py-2 text-white bg-neutral-900 text-xs rounded"
+                          >
+                            {t?.lesson?.check || 'Check'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* MULTIPLE_CHOICE Type */}
+                      {ex.type === 'MULTIPLE_CHOICE' && (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {ex.options?.map((option, optIdx) => {
+                              const isSelected = userAnswers[ex.id] === option;
+                              return (
+                                <button
+                                  key={optIdx}
+                                  onClick={() => setUserAnswers((prev) => ({ ...prev, [ex.id]: option }))}
+                                  className={`p-2.5 text-left text-sm rounded border transition-all ${
+                                    isSelected
+                                      ? 'border-emerald-500 text-emerald-500 bg-white dark:bg-zinc-800'
+                                      : 'border-neutral-400 bg-white dark:bg-zinc-800 '
+                                  }`}
+                                >
+                                  {option}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => handleCheckExercise(ex)}
+                            disabled={!userAnswers[ex.id]}
+                            className="px-4 py-2 text-white bg-neutral-900 text-xs rounded"
+                          >
+                            {t?.lesson?.check || 'Check'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* MATCHING Type */}
+                      {ex.type === 'MATCHING' && ex.pairs && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            {Object.entries(ex.pairs).map(([leftKey, rightValue], pairIdx) => (
+                              <React.Fragment key={pairIdx}>
+                                <div className="p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-sm font-medium flex items-center">
+                                  {leftKey}
+                                </div>
+                                <select
+                                  value={userAnswers[ex.id]?.[leftKey] || ''}
+                                  onChange={(e) => {
+                                    const currentMap = userAnswers[ex.id] || {};
+                                    setUserAnswers((prev) => ({
+                                      ...prev,
+                                      [ex.id]: { ...currentMap, [leftKey]: e.target.value }
+                                    }));
+                                  }}
+                                  className="p-2 rounded border border-neutral-400 bg-white dark:bg-zinc-800"
+                                >
+                                  <option value="">-- Select match --</option>
+                                  {Object.values(ex?.pairs ?? {}).map((val, vIdx) => (
+                                    <option key={vIdx} value={val}>
+                                      {val}
+                                    </option>
+                                  ))}
+                                </select>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => handleCheckExercise(ex)}
+                            className="px-4 py-2 text-white bg-neutral-900 text-xs rounded"
+                          >
+                            {t?.lesson?.check || 'Check'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Verification Result Feedback */}
+                      {status !== undefined && (
+                        <p
+                          className={`text-xs font-bold pt-1 ${
+                            status ? 'text-emerald-800 dark:text-emerald-600' : 'text-red-500'
+                          }`}
+                        >
+                          {status ? (t?.lesson?.correct || 'Correct!') : (t?.lesson?.tryAgain || 'Incorrect, try again!')}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+        );
+      })}
     </div>
   );
 }
-

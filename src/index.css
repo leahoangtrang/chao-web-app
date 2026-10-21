@@ -1,3 +1,4 @@
+/* Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE */
 @import "tailwindcss";
 @tailwind utilities;
 
@@ -7,6 +8,9 @@
   }
   h2 {
     @apply text-5xl text-emerald-800 dark:text-emerald-600 font-bold font-serif pt-6 w-5/6;
+  }
+  h3 {
+    @apply text-emerald-800 dark:text-emerald-600;
   }
  
 }

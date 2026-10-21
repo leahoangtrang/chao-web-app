@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { Link } from 'react-router';
 import { useAuth } from '../context/AuthContext'; // Adjust import path
 import { useLanguage } from '../context/LanguageContext'; // For i18n support

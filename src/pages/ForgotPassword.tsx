@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { AuthService } from '../api/auth.service';
@@ -14,7 +15,6 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      // Calls your backend endpoint
       await AuthService.forgotPassword( {email} );
       setSubmitted(true);
     } catch (err : any) {
@@ -25,9 +25,9 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow rounded-2xl mt-12">
-      <h2 className="text-xl font-bold mb-2">Reset Your Password</h2>
-      <p className="text-sm text-slate-500 mb-6">
+    <div className="w-5/6 max-w-md mx-auto p-6 text-slate-900 dark:text-zinc-200 bg-white dark:bg-zinc-800 rounded mt-12">
+      <h3 className="text-xl font-bold mb-2">Reset Your Password</h3>
+      <p className="text-sm mb-6">
         Enter your email address and we'll send you a link to reset your password.
       </p>
 
@@ -35,7 +35,7 @@ export default function ForgotPassword() {
 
       {submitted ? (
         <div className="space-y-4">
-          <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl text-sm border border-emerald-200">
+          <div className="text-emerald-800 bg-emerald-50 p-4 rounded text-sm border border-neutral-400">
             If an account with that email exists, we have sent a password reset link. Please check your inbox.
           </div>
           <Link 
@@ -48,12 +48,12 @@ export default function ForgotPassword() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Email Address</label>
+            <label className="block text-sm font-medium">Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-slate-300 p-2 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="inputField"
               required
             />
           </div>
@@ -61,13 +61,13 @@ export default function ForgotPassword() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-emerald-600 text-white p-2 rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50"
+            className="actionButton w-full"
           >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
 
           <div className="text-center mt-4">
-            <Link to="/chao/login" className="text-sm text-slate-600 hover:underline">
+            <Link to="/chao/login" className="text-sm hover:underline">
               Remembered your password? Log in
             </Link>
           </div>

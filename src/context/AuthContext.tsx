@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { AuthService } from '../api/auth.service';
 // import { UserService } from '../api/user.service';

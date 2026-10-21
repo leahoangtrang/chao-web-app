@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { AuthService } from '../api/auth.service';
@@ -18,15 +19,15 @@ export default function ResetPassword() {
     try {
       const response = await AuthService.resetPassword({ token, newPassword });
       setMessage(response);
-      setTimeout(() => navigate('/login'), 3000); // Redirect to login after 3s
+      setTimeout(() => navigate('/chao/login'), 3000); // Redirect to login after 3s
     } catch (err : any) {
       setError(err.response?.data?.message || 'Failed to reset password.');
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow rounded-2xl mt-12">
-      <h2 className="text-xl font-bold mb-4">Set New Password</h2>
+    <div className="w-5/6 max-w-md mx-auto p-6 text-slate-900 dark:text-zinc-200 bg-white dark:bg-zinc-800 rounded mt-12">
+      <h3 className="text-xl font-bold mb-4">Set New Password</h3>
       
       {message && <div className="bg-emerald-100 text-emerald-800 p-3 rounded mb-4 text-sm">{message}</div>}
       {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4 text-sm">{error}</div>}
@@ -38,11 +39,11 @@ export default function ResetPassword() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full border p-2 rounded mt-1"
+            className="inputField"
             required
           />
         </div>
-        <button type="submit" className="w-full bg-emerald-600 text-white p-2 rounded font-medium hover:bg-emerald-700">
+        <button type="submit" className="actionButton w-full">
           Reset Password
         </button>
       </form>

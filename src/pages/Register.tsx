@@ -1,9 +1,11 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 // import { AuthService } from '../api/auth.service';
 import type { RegisterRequest } from '../types/api';
 // import { AxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 
 export const RegisterForm = () => {
   const [formData, setFormData] = useState<RegisterRequest>({
@@ -14,6 +16,7 @@ export const RegisterForm = () => {
   const [error, setError] = useState<string>('');
 
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -34,7 +37,7 @@ export const RegisterForm = () => {
       setError(result.message ?? '');
     } else {
       // alert('Registration successful!');
-      window.location.href = '/chao/me'; // Redirect to login
+      navigate('/chao/me'); // Redirect to login
     }   
 
   };

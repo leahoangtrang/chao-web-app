@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import React, { createContext, useContext, useState } from 'react';
 import { translations, type Language } from '../languages/translations';
 

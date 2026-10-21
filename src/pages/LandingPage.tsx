@@ -1,4 +1,4 @@
-// import React from 'react';
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { useLanguage } from "../context/LanguageContext";
 
 export function LandingPage() {

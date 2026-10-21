@@ -1,3 +1,4 @@
+// Copyright (C) 2026 leahoangtrang. For the full notice: chao-web-app/LICENSE
 import api from './axios';
 import type {RegisterRequest, LoginRequest, AuthResponse, ResetPasswordRequest} from '../types/api';
 const AUTH_URL = import.meta.env.VITE_API_AUTH_URL;

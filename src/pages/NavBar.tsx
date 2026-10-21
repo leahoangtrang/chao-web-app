@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';

@@ -1,8 +1,13 @@
-// 1. Brief lesson summary nested inside a Unit list
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
+export interface MaterialProgres {
+  id: number
+}
+
 export interface LessonSummary {
   id: number;
   title: string;
   lessonOrder: number;
+  materials: MaterialProgres[]
 }
 
 export interface Unit {
@@ -23,7 +28,7 @@ export interface Vocabulary {
 
 // 2. Material (Lesson Content)
 export interface Material {
-  id: number;
+  id: string;
   title: string;
   materialType: string; // e.g., "Phrase"
   note: string;
@@ -35,11 +40,11 @@ export interface Material {
 // 3. Exercise / Quiz Item
 export interface Exercise {
   id: string; // UUID from Java
-  type: 'TRANSLATION_INPUT' | 'MATCHING' | string;
+  type: 'TRANSLATION_INPUT' | 'MATCHING' | 'MULTIPLE_CHOICE' | string;
   prompt: string;
   targetLemma: string | null;
   options: string[] | null;
-  pairs: Record<string, string> | null; // Key-value object for matching pairs
+  pairs?: Record<string, string>; // Key-value object for matching pairs
   correctAnswer: string | null;
 }
 
@@ -48,7 +53,6 @@ export interface LessonDetail {
   lessonId: number;
   title: string;
   materials: Material[];
-  // exercises: Exercise[];
 }
 
 // 5. Request DTOs (Sent to Spring Boot)

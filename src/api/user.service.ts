@@ -1,3 +1,4 @@
+// Copyright (C) 2026  leahoangtrang. For the full notice: chao-web-app/LICENSE
 import api from './axios';
 import type {UserResponse, UpdateUserRequest, ChangePasswordRequest, UpdateUserResponse} from '../types/api';
 const URL = import.meta.env.VITE_API_USER_URL;
